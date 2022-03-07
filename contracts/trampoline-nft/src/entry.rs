@@ -1,6 +1,8 @@
 // Import from `core` instead of from `std` since we are in no-std mode
-
+extern crate no_std_compat as std;
+use std::prelude::v1::*;
 use core::result::Result;
+use std::collections::HashMap;
 
 // Import heap related library from `alloc`
 // https://doc.rust-lang.org/alloc/index.html
@@ -16,7 +18,7 @@ use ckb_std::{
     ckb_constants::Source::{GroupInput, GroupOutput, self},
 };
 
-use trampoline_sdk::builtins::t_nft::{TrampolineNFT, GenesisId, ContentId};
+use trampoline_sdk::{builtins::t_nft::{TrampolineNFT, GenesisId, ContentId}, schema::JsonConversion};
 use trampoline_sdk::schema::{SchemaPrimitiveType, BytesConversion, MolConversion};
 use crate::error::Error;
 
@@ -80,7 +82,45 @@ pub fn main() -> Result<(), Error> {
     minted_outputs.iter().for_each(|nft| {
         assert!(nft.genesis_id.to_bytes() == gen_id.to_bytes());
     });
-    Ok(())
+
+    let mut id_to_count_map: HashMap<Vec<u8>, usize> = HashMap::new();
+    input_nfts.iter().for_each(|nft| {
+        let mut nft_count = 0;
+        match id_to_count_map.get(&nft.genesis_id.to_bytes().to_vec()) {
+            Some(count) => {
+                nft_count = *count;
+               
+            },
+            None => {}
+        }
+        id_to_count_map.insert(nft.genesis_id.to_bytes().to_vec(), nft_count + 1); 
+    });
+    
+    output_nfts.iter().filter(|nft| {
+        minted_outputs.iter().find(|minted_nft| {
+            minted_nft.genesis_id.to_bytes() == nft.genesis_id.to_bytes()
+        }).is_none()  
+    }).map(|used_nft| {
+        let mut nft_count = 0;
+        let res = match id_to_count_map.get(&used_nft.genesis_id.to_bytes().to_vec()) {
+            Some(count) => {
+                if *count == 0 {
+                    Err(Error::UnauthorizedDuplicationOfExistingNFT)
+                } else {
+                    nft_count = *count;
+                    Ok(())
+                }
+            },
+            None => {
+                Err(Error::UnrecognizedNftInOutput)
+            }
+        };
+        if res.is_ok() {
+            id_to_count_map.insert(used_nft.genesis_id.to_bytes().to_vec(), nft_count - 1);
+        }
+        res
+    }).collect::<Result<Vec<()>, Error>>().map(|v| ())
+    
 }
 
 fn load_genesis_id() -> Result<GenesisId, Error> {

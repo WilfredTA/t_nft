@@ -9,6 +9,8 @@ pub enum Error {
     Encoding,
     // Add customized errors here...
     DataSizeTooSmall,
+    UnrecognizedNftInOutput,
+    UnauthorizedDuplicationOfExistingNFT
 }
 
 impl From<SysError> for Error {

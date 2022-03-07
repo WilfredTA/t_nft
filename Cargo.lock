@@ -2381,7 +2381,7 @@ dependencies = [
  "ckb-jsonrpc-types",
  "tentacle-multiaddr",
  "tentacle-secio",
- "trampoline-sdk 0.1.0",
+ "trampoline-sdk",
 ]
 
 [[package]]
@@ -2525,12 +2525,13 @@ dependencies = [
  "blake2b-ref 0.3.0",
  "ckb-std",
  "no-std-compat",
- "trampoline-sdk 0.1.0 (git+https://github.com/WilfredTA/trampoline?branch=feat/nft-sdk)",
+ "trampoline-sdk",
 ]
 
 [[package]]
 name = "trampoline-sdk"
 version = "0.1.0"
+source = "git+https://github.com/WilfredTA/trampoline?branch=feat/nft-sdk#5d99800022be62a04a235644eb4a5a96fb1a2b11"
 dependencies = [
  "anyhow",
  "blake2b-rs",
@@ -2544,6 +2545,7 @@ dependencies = [
  "ckb-jsonrpc-types",
  "ckb-resource",
  "ckb-script",
+ "ckb-standalone-types",
  "ckb-system-scripts",
  "ckb-traits",
  "ckb-types",
@@ -2566,16 +2568,6 @@ dependencies = [
  "tokio",
  "toml",
  "walkdir",
-]
-
-[[package]]
-name = "trampoline-sdk"
-version = "0.1.0"
-source = "git+https://github.com/WilfredTA/trampoline?branch=feat/nft-sdk#68f4690d0550424596afd9616afd2637a821cbc9"
-dependencies = [
- "ckb-standalone-types",
- "molecule",
- "no-std-compat",
 ]
 
 [[package]]

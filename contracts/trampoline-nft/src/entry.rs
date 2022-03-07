@@ -127,9 +127,11 @@ fn load_genesis_id() -> Result<GenesisId, Error> {
     let genesis_seed = high_level::load_input_out_point(0, Source::Input)?;
     let seed_tx_hash = genesis_seed.tx_hash();
     let seed_idx = genesis_seed.index();
+    let mut seed = Vec::with_capacity(36);
+    seed.extend_from_slice(seed_tx_hash.as_slice());
+    seed.extend_from_slice(seed_idx.as_slice());
     let mut hasher = blake2b();
-    hasher.update(seed_tx_hash.as_slice());
-    hasher.update(seed_idx.as_slice());
+    hasher.update(&seed);
     let mut expected_genesis_id = [0u8; 32];
     hasher.finalize(&mut expected_genesis_id);
     

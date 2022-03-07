@@ -552,6 +552,7 @@ dependencies = [
 [[package]]
 name = "ckb-std"
 version = "0.9.0"
+source = "git+https://github.com/WilfredTA/ckb-std#fd7918408bae1a1a5425882da438f835255291cd"
 dependencies = [
  "buddy-alloc",
  "cc",
@@ -2530,6 +2531,7 @@ dependencies = [
 [[package]]
 name = "trampoline-sdk"
 version = "0.1.0"
+source = "git+https://github.com/WilfredTA/trampoline?branch=feat/nft-sdk#68f4690d0550424596afd9616afd2637a821cbc9"
 dependencies = [
  "anyhow",
  "blake2b-rs",

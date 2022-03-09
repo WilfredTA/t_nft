@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ckb-std = {git = "https://github.com/WilfredTA/ckb-std"}
+ckb-std = "0.9"
 no-std-compat = { version = "0.4.1", features = ["alloc", "compat_macros", "compat_sync", "compat_hash"] }
 trampoline-sdk = {git = "https://github.com/WilfredTA/trampoline", branch = "feat/nft-sdk", features = ["script"], default-features = false}
 blake2b-ref = "0.3"

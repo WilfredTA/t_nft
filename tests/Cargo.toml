@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 tentacle-multiaddr = "=0.3.0"
 tentacle-secio = "=0.5.0"
-#trampoline-sdk = {git = "https://github.com/WilfredTA/trampoline", branch = "feat/nft-sdk"}
+#trampoline-sdk = {path = "/home/tannr/trampoline/trampoline"}
 trampoline-sdk = {git = "https://github.com/WilfredTA/trampoline", branch = "feat/nft-sdk"}
 ckb-hash = "0.101.2"
 ckb-always-success-script = "0.0.1"

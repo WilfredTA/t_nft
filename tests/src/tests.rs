@@ -126,12 +126,9 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
      let tnft_code_cell = tnft_contract.as_code_cell();
 
      let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
-     let mut tx_skeleton = TransactionBuilder::default()
-        .cell_dep(tnft_contract.as_cell_dep(tnft_code_cell_outpoint.clone().into()).into())
-        .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
-        .output(gen_tnft_cell_output(&tnft_contract))
-        .output_data([0u8; 64].to_vec().pack())
-        .build();
+    //  let mut tx_skeleton = TransactionBuilder::default()
+    //     .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
+    //     .build();
     let genesis_seed = genesis_id_from(tx_input_cell.clone());
 
     tnft_contract.add_input_rule(move |_tx| -> CellQuery {
@@ -156,7 +153,7 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
     let chain_rpc = ChainRpc::new(chain);
     let generator = Generator::new().chain_service(&chain_rpc).query_service(&chain_rpc)
     .pipeline(vec![&tnft_contract]);
-    let new_mint_tx = generator.pipe(tx_skeleton, Arc::new(Mutex::new(vec![])));
+    let new_mint_tx = generator.generate(); //generator.pipe(tx_skeleton, Arc::new(Mutex::new(vec![])));
     let is_valid = chain_rpc.verify_tx(new_mint_tx.into());
     assert!(is_valid);
  }

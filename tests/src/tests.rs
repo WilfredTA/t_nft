@@ -14,10 +14,10 @@ use trampoline_sdk::ckb_types::packed::{CellOutput, CellInputBuilder, CellInput}
 // };
 // use ckb_testtool::ckb_error::Error;
 use trampoline_sdk::ckb_types::{self, error::Error, bytes::Bytes, prelude::*, H256, 
-    core::{TransactionView, TransactionBuilder}, packed::*};
+    core::{TransactionView, TransactionBuilder, Capacity}, packed::*};
 use trampoline_sdk::chain::{MockChain, MockChainTxProvider as ChainRpc};
 use trampoline_sdk::contract::*;
-use trampoline_sdk::contract::{schema::*};
+use trampoline_sdk::contract::{schema::*, ContractSource};
 use trampoline_sdk::contract::{builtins::t_nft::*, generator::*};
 use ckb_always_success_script::ALWAYS_SUCCESS;
 use ckb_jsonrpc_types::{JsonBytes};
@@ -109,23 +109,16 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
  fn test_success_deploy() {
      let mut tnft_contract = gen_nft_contract();
      let mut chain = MockChain::default(); 
-     let minter_lock_code_cell_data: Bytes =
-     ckb_always_success_script::ALWAYS_SUCCESS.to_vec().into();
-     let minter_lock_cell = chain.deploy_cell_with_data(minter_lock_code_cell_data);
+     let minter_lock_cell = chain.get_default_script_outpoint();
      let minter_lock_script = chain.build_script(&minter_lock_cell, vec![1_u8].into());
 
 
-     let tx_input_cell = chain.create_cell(
-        CellOutput::new_builder()
-            .capacity(2000_u64.pack())
-            .lock(minter_lock_script.clone().unwrap())
-            .build(),
-        Default::default(),
-    );
+     let tx_input_cell =  chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
 
      let tnft_code_cell = tnft_contract.as_code_cell();
 
      let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
+     tnft_contract.source = Some(ContractSource::Chain(tnft_code_cell_outpoint.clone().into()));
     //  let mut tx_skeleton = TransactionBuilder::default()
     //     .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
     //     .build();
@@ -140,7 +133,8 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
         }
     });
 
-    tnft_contract.add_output_rule(move |nft: NftField| -> NftField {
+    tnft_contract.add_output_rule(ContractField::Data, move |ctx| -> NftField {
+        let nft: NftField = ctx.load(ContractField::Data);
         if let ContractCellField::Data(nft_data) = nft {
             let mut t_nft_data = nft_data.clone();
             t_nft_data.genesis_id = genesis_seed.clone();
@@ -158,6 +152,116 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
     assert!(is_valid);
  }
 
+
+ #[test]
+ fn test_invalid_mismatched_genesis_id() {
+    let mut tnft_contract = gen_nft_contract();
+    let mut chain = MockChain::default(); 
+    let minter_lock_cell = chain.get_default_script_outpoint();
+    let minter_lock_script = chain.build_script(&minter_lock_cell, vec![1_u8].into());
+
+ 
+    let tx_input_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
+
+    let genesis_id_seed_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
+
+   let tnft_code_cell = tnft_contract.as_code_cell();
+
+   let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
+   tnft_contract.source = Some(ContractSource::Chain(tnft_code_cell_outpoint.clone().into()));
+   let genesis_seed = genesis_id_from(genesis_id_seed_cell.clone());
+
+
+    tnft_contract.add_input_rule(move |_tx| -> CellQuery {
+        CellQuery {
+            _query: QueryStatement::Single(CellQueryAttribute::LockHash(
+                minter_lock_script.clone().unwrap().calc_script_hash().into(),
+            )),
+            _limit: 1,
+        }
+    });
+
+    tnft_contract.add_output_rule(ContractField::Data, move |ctx| -> NftField {
+        let nft: NftField = ctx.load(ContractField::Data);
+        if let ContractCellField::Data(nft_data) = nft {
+            let mut t_nft_data = nft_data.clone();
+            t_nft_data.genesis_id = genesis_seed.clone();
+            NftField::Data(t_nft_data)
+        } else {
+            nft
+        }
+    });
+        
+    let chain_rpc = ChainRpc::new(chain);
+    let generator = Generator::new().chain_service(&chain_rpc).query_service(&chain_rpc)
+    .pipeline(vec![&tnft_contract]);
+    let new_mint_tx = generator.generate(); //generator.pipe(tx_skeleton, Arc::new(Mutex::new(vec![])));
+    let is_valid = chain_rpc.verify_tx(new_mint_tx.into());
+    assert!(!is_valid);
+
+ }
+
+ #[test]
+ fn test_invalid_mint_of_pre_existing_tnft() {
+    let mut tnft_contract = gen_nft_contract();
+    let mut chain = MockChain::default(); 
+    let minter_lock_cell = chain.get_default_script_outpoint();
+    let minter_lock_script = chain.build_script(&minter_lock_cell, vec![1_u8].into());
+
+
+    let tx_input_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
+    let input_tnft_seed = chain.deploy_random_cell_with_default_lock(2000, Some(vec![2_u8].into()));
+    
+    let tnft_code_cell = tnft_contract.as_code_cell();
+
+    let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
+    tnft_contract.source = Some(ContractSource::Chain(tnft_code_cell_outpoint.clone().into()));
+   //  let mut tx_skeleton = TransactionBuilder::default()
+   //     .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
+   //     .build();
+   let genesis_seed = genesis_id_from(tx_input_cell.clone());
+
+   let tnft_input_cell = CellOutput::new_builder()
+     .lock(minter_lock_script.clone().unwrap())
+     .capacity(150_u64.pack())
+     .type_(Some(Script::from(tnft_contract.as_script().unwrap())).pack())
+     .build();
+    let tnft_input_cell_data = TrampolineNFT {
+        genesis_id: genesis_id_from(input_tnft_seed.clone()),
+        cid: Default::default(),
+    };
+
+    let tnft_input_outpoint = chain.deploy_cell_output(tnft_input_cell_data.clone().to_bytes(), tnft_input_cell.clone());
+
+    // Create two tnft output cells with same data as tnft input cell
+    // Add input rule to grab the tnft_input_cell
+    tnft_contract.add_input_rule(move |_tx| -> CellQuery {
+        CellQuery {
+            _query: QueryStatement::Single(CellQueryAttribute::LockHash(
+                minter_lock_script.clone().unwrap().calc_script_hash().into(),
+            )),
+            _limit: 1,
+        }
+    });
+
+    tnft_contract.add_output_rule(ContractField::Data, move |ctx| -> NftField {
+        let nft: NftField = ctx.load(ContractField::Data);
+        if let ContractCellField::Data(nft_data) = nft {
+            let mut t_nft_data = nft_data.clone();
+            t_nft_data.genesis_id = genesis_seed.clone();
+            NftField::Data(t_nft_data)
+        } else {
+            nft
+        }
+    });
+       
+   let chain_rpc = ChainRpc::new(chain);
+   let generator = Generator::new().chain_service(&chain_rpc).query_service(&chain_rpc)
+   .pipeline(vec![&tnft_contract]);
+   let new_mint_tx = generator.generate(); //generator.pipe(tx_skeleton, Arc::new(Mutex::new(vec![])));
+   let is_valid = chain_rpc.verify_tx(new_mint_tx.into());
+   assert!(is_valid);
+ }
 // #[test]
 // fn test_success() {
 //     // deploy contract

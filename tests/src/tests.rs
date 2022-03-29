@@ -119,9 +119,7 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
 
      let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
      tnft_contract.source = Some(ContractSource::Chain(tnft_code_cell_outpoint.clone().into()));
-    //  let mut tx_skeleton = TransactionBuilder::default()
-    //     .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
-    //     .build();
+ 
     let genesis_seed = genesis_id_from(tx_input_cell.clone());
 
     tnft_contract.add_input_rule(move |_tx| -> CellQuery {
@@ -163,7 +161,7 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
  
     let tx_input_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
 
-    let genesis_id_seed_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![1_u8].into()));
+    let genesis_id_seed_cell = chain.deploy_random_cell_with_default_lock(2000, Some(vec![2_u8].into()));
 
    let tnft_code_cell = tnft_contract.as_code_cell();
 
@@ -201,6 +199,7 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
 
  }
 
+ // TO DO: Finish Test; currently builds a tx identical to mint
  #[test]
  fn test_invalid_mint_of_pre_existing_tnft() {
     let mut tnft_contract = gen_nft_contract();
@@ -216,16 +215,13 @@ type NftField = ContractCellField<NftArgs, TrampolineNFT>;
 
     let tnft_code_cell_outpoint = chain.create_cell(tnft_code_cell.0, tnft_code_cell.1);
     tnft_contract.source = Some(ContractSource::Chain(tnft_code_cell_outpoint.clone().into()));
-   //  let mut tx_skeleton = TransactionBuilder::default()
-   //     .cell_dep(chain.find_cell_dep_for_script(minter_lock_script.as_ref().unwrap()))
-   //     .build();
-   let genesis_seed = genesis_id_from(tx_input_cell.clone());
+    let genesis_seed = genesis_id_from(tx_input_cell.clone());
 
-   let tnft_input_cell = CellOutput::new_builder()
-     .lock(minter_lock_script.clone().unwrap())
-     .capacity(150_u64.pack())
-     .type_(Some(Script::from(tnft_contract.as_script().unwrap())).pack())
-     .build();
+    let tnft_input_cell = CellOutput::new_builder()
+        .lock(minter_lock_script.clone().unwrap())
+        .capacity(150_u64.pack())
+        .type_(Some(Script::from(tnft_contract.as_script().unwrap())).pack())
+        .build();
     let tnft_input_cell_data = TrampolineNFT {
         genesis_id: genesis_id_from(input_tnft_seed.clone()),
         cid: Default::default(),

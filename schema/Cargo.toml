@@ -1,12 +1,9 @@
 [package]
-name = "trampoline-nft"
+name = "tnft-schema"
 version = "0.1.0"
-edition = "2018"
-
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ckb-std = "0.9"
-blake2b-ref = "0.3"
-tnft-schema = {path = "../../schema"}
+molecule = { version = "0.7.2", default-features = false }

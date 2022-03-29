@@ -1,5 +1,5 @@
 [workspace]
-members = ["tests", "contracts/trampoline-nft"]
+members = ["tests", "contracts/trampoline-nft", "schema"]
 
 [profile.release]
 overflow-checks = true

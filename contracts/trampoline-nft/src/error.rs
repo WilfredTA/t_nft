@@ -10,7 +10,8 @@ pub enum Error {
     // Add customized errors here...
     DataSizeTooSmall,
     UnrecognizedNftInOutput,
-    UnauthorizedDuplicationOfExistingNFT
+    PreExistingGenesisIdMinted,
+    InvalidGenesisIdInInput, // This *should* be impossible to reach
 }
 
 impl From<SysError> for Error {
@@ -25,4 +26,3 @@ impl From<SysError> for Error {
         }
     }
 }
-

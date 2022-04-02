@@ -551,7 +551,7 @@ dependencies = [
 [[package]]
 name = "ckb-sdk"
 version = "1.0.0"
-source = "git+https://github.com/TheWaWaR/ckb-sdk#0bb5c9f97507e88506e44190740bcfbe298c2102"
+source = "git+https://github.com/TheWaWaR/ckb-sdk#27a935831821546f81e5bd351b539de718dcb824"
 dependencies = [
  "bech32",
  "bitcoin_hashes",
@@ -2607,7 +2607,7 @@ dependencies = [
 [[package]]
 name = "trampoline-sdk"
 version = "0.1.0"
-source = "git+https://github.com/WilfredTA/trampoline?branch=develop#eebb7ca82bdb32caf3413eb6d631ae91638b8b1b"
+source = "git+https://github.com/WilfredTA/trampoline?branch=develop#690f5c2da9c9350f0de7d981641244aa1207f408"
 dependencies = [
  "anyhow",
  "blake2b-rs",

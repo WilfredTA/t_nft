@@ -5,14 +5,6 @@ use super::*;
 use ckb_hash::blake2b_256;
 
 use trampoline_sdk::ckb_types::packed::{CellInput, CellInputBuilder, CellOutput};
-// use ckb_testtool::context::Context;
-// use ckb_testtool::ckb_types::{
-//     bytes::Bytes,
-//     core::TransactionBuilder,
-//     packed::*,
-//     prelude::*,
-// };
-// use ckb_testtool::ckb_error::Error;
 use ckb_always_success_script::ALWAYS_SUCCESS;
 use ckb_jsonrpc_types::JsonBytes;
 use trampoline_sdk::chain::{MockChain, MockChainTxProvider as ChainRpc};
@@ -29,11 +21,6 @@ use trampoline_sdk::contract::*;
 use trampoline_sdk::contract::{builtins::t_nft::*, generator::*};
 use trampoline_sdk::contract::{schema::*, ContractSource};
 
-// TO DO
-// Should just add a Bytes type to trampoline which provides a single interface for all these
-// Various byte types
-
-// ALSO: Make generator pipeline able to handle empty data so it doesn't have to be set
 const MAX_CYCLES: u64 = 10_000_000;
 
 // error numbers
@@ -248,7 +235,6 @@ fn test_invalid_mismatched_genesis_id() {
     assert!(!is_valid);
 }
 
-// TO DO: Finish Test; currently builds a tx identical to mint
 #[test]
 fn test_invalid_mint_of_pre_existing_tnft() {
     let mut tnft_contract = gen_nft_contract();
